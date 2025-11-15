@@ -52,19 +52,27 @@ public class MainPage {
         driver.get("https://qa-scooter.praktikum-services.ru");
     }
 
+    public void scrollToFAQSection() {
+        WebElement faqSection = driver.findElement(questionTitle);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", faqSection);
+    }
+
     public void clickTopOrderButton() {
         driver.findElement(orderButtonTop).click();
     }
 
     public void clickBottomOrderButton() {
         WebElement element = driver.findElement(orderButtonBottom);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", element);
         element.click();
     }
 
     public void clickQuestion(int questionNumber) {
         int index = questionNumber - 1;
         if (index >= 0 && index < questions.size()) {
-            driver.findElement(questions.get(index)).click();
+            WebElement question = driver.findElement(questions.get(index));
+            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", question);
+            question.click();
         }
     }
 
@@ -88,8 +96,11 @@ public class MainPage {
         return questions.size();
     }
 
-    public void scrollToFAQSection() {
-        WebElement faqSection = driver.findElement(questionTitle);
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", questionTitle);
+    public boolean isMainPageLoaded() {
+        return driver.getCurrentUrl().contains("qa-scooter.praktikum-services.ru");
+    }
+
+    public boolean isFAQSectionDisplayed() {
+        return driver.findElement(questionTitle).isDisplayed();
     }
 }

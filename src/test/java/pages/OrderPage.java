@@ -2,16 +2,17 @@ package pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 
 public class OrderPage {
-
     private WebDriver driver;
 
     // Локаторы для формы заказа
-    public final By nameField = By.xpath("//input[@placeholder='* Имя']");
+    private final By nameField = By.xpath("//input[@placeholder='* Имя']");
     private final By lastNameField = By.xpath("//input[@placeholder='* Фамилия']");
     private final By addressField = By.xpath("//input[@placeholder='* Адрес: куда привезти заказ']");
     private final By metroField = By.xpath("//input[@placeholder='* Станция метро']");
@@ -27,15 +28,19 @@ public class OrderPage {
     private final By commentField = By.xpath("//input[@placeholder='Комментарий для курьера']");
     private final By orderButton = By.xpath("//button[contains(text(), 'Заказать')]");
 
-    // Локаторы для модального окна подтверждения
+    // Локатор для закрытия календаря
+    private final By pageHeader = By.className("Order_Header__BZXOb");
+
+    // Локаторы для подтверждения заказа
     private final By confirmButton = By.xpath("//button[text()='Да']");
-    private final By successMessage = By.xpath("//div[contains(@class, 'Order_ModalHeader')]");
+
+    // Локаторы для успешного заказа
+    private final By successModal = By.className("Order_Modal__YZ-d3");
 
     public OrderPage(WebDriver driver) {
         this.driver = driver;
     }
 
-    //Метод для заполнения первой части формы заказа
     public void fillFirstPage(String name, String lastName, String address, String phone) {
         driver.findElement(nameField).sendKeys(name);
         driver.findElement(lastNameField).sendKeys(lastName);
@@ -46,18 +51,13 @@ public class OrderPage {
         driver.findElement(nextButton).click();
     }
 
-    //Метод для заполнения второй части формы заказа
     public void fillSecondPage(String date, String period, String color, String comment) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         wait.until(ExpectedConditions.visibilityOfElementLocated(dateField));
-        driver.findElement(dateField).sendKeys(date);
-        driver.findElement(rentalPeriod).click();
 
-        if (period.equals("сутки")) {
-            driver.findElement(rental1Day).click();
-        } else {
-            driver.findElement(rental5Days).click();
-        }
+        driver.findElement(dateField).sendKeys(date);
+        closeCalendar();
+        selectRentalPeriod(period);
 
         if (color.equals("black")) {
             driver.findElement(blackColor).click();
@@ -69,11 +69,56 @@ public class OrderPage {
         driver.findElement(orderButton).click();
     }
 
-    //Метод подтверждения заказа
+    private void closeCalendar() {
+        try {
+            WebElement header = driver.findElement(pageHeader);
+            header.click();
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            // Если не получилось, пробуем альтернативный способ
+            try {
+                WebElement body = driver.findElement(By.tagName("body"));
+                body.click();
+                Thread.sleep(1000);
+            } catch (Exception ex) {
+                // Продолжаем выполнение
+            }
+        }
+    }
+
+    private void selectRentalPeriod(String period) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(rentalPeriod));
+            driver.findElement(rentalPeriod).click();
+        } catch (Exception e) {
+            WebElement rentalElement = driver.findElement(rentalPeriod);
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", rentalElement);
+        }
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(rental1Day));
+
+        if (period.equals("сутки")) {
+            driver.findElement(rental1Day).click();
+        } else {
+            driver.findElement(rental5Days).click();
+        }
+    }
+
     public void confirmOrder() {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         wait.until(ExpectedConditions.elementToBeClickable(confirmButton));
         driver.findElement(confirmButton).click();
     }
 
+    public boolean isOrderSuccessfullyCreated() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(successModal));
+            return driver.findElement(successModal).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
