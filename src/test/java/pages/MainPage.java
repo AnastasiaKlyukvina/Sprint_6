@@ -96,10 +96,6 @@ public class MainPage {
         return questions.size();
     }
 
-    public boolean isMainPageLoaded() {
-        return driver.getCurrentUrl().contains("qa-scooter.praktikum-services.ru");
-    }
-
     public boolean isFAQSectionDisplayed() {
         return driver.findElement(questionTitle).isDisplayed();
     }

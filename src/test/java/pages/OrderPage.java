@@ -26,7 +26,7 @@ public class OrderPage {
     private final By blackColor = By.id("black");
     private final By greyColor = By.id("grey");
     private final By commentField = By.xpath("//input[@placeholder='Комментарий для курьера']");
-    private final By orderButton = By.xpath("//button[contains(text(), 'Заказать')]");
+    private final By formOrderButton = By.xpath("//button[contains(@class, 'Button_Middle__1CSJM') and contains(., 'Заказать')]");
 
     // Локатор для закрытия календаря
     private final By pageHeader = By.className("Order_Header__BZXOb");
@@ -35,7 +35,7 @@ public class OrderPage {
     private final By confirmButton = By.xpath("//button[text()='Да']");
 
     // Локаторы для успешного заказа
-    private final By successModal = By.className("Order_Modal__YZ-d3");
+    private final By successModal = By.xpath("//div[contains(@class, 'Order_Modal')]//div[contains(text(), 'Заказ оформлен')]");
 
     public OrderPage(WebDriver driver) {
         this.driver = driver;
@@ -66,22 +66,24 @@ public class OrderPage {
         }
 
         driver.findElement(commentField).sendKeys(comment);
-        driver.findElement(orderButton).click();
+        driver.findElement(formOrderButton).click();
     }
 
     private void closeCalendar() {
         try {
-            WebElement header = driver.findElement(pageHeader);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+            WebElement header = wait.until(ExpectedConditions.elementToBeClickable(pageHeader));
             header.click();
-            Thread.sleep(1000);
+
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.className("react-datepicker")));
+
         } catch (Exception e) {
-            // Если не получилось, пробуем альтернативный способ
+
             try {
                 WebElement body = driver.findElement(By.tagName("body"));
                 body.click();
-                Thread.sleep(1000);
             } catch (Exception ex) {
-                // Продолжаем выполнение
+
             }
         }
     }
